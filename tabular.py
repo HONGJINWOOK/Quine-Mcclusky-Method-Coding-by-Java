@@ -1,4 +1,4 @@
-class Minterm: 
+class Minterm: #Minterm 
     def __init__(self, values, value):
         self._values = values
         self._value = value
