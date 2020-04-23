@@ -1,0 +1,136 @@
+class Minterm: 
+    def __init__(self, values, value):
+        self._values = values
+        self._value = value
+        self._used = False
+
+        self._values.sort()
+    
+    def __str__(self): # __str__ 메소드는 m*0, 4, 8, 12) = --00 형식으로 출력
+        values = ", ".join([str(value) for value in self._values])
+        return f"m({values}) = {self._value}"
+    
+    def __eq__(self, minterm):
+        if type(minterm) != Minterm:
+            return False
+
+        return (
+            self._value == minterm._value and
+            self._values == minterm._values
+        )
+    def get_values(self): #minterm의 커버의 모든 implicant return
+        return self._values
+  
+    def get_value(self): #이 최소값에 대한 비트 값('-010', '1010'등)을 반환
+        return self._value
+    
+    def use(self):
+        self._used = True
+    
+    def used(self): #minterm 사용 여부를 반환
+        return self._used
+        
+    def plus(self, minterm): #가능한 경우 이 minterm과 지정한 minterm 결합
+
+        #결합할 것과 동일한지 확인
+        if self._value == minterm._value or self._values == minterm._values:
+            return None
+         
+        #최소값의 차이의 양을 확인하고 또한 결과 문자열을 확인
+        diff = 0
+        result = ""
+
+        #모든 비트 값을 반복
+        for char in range(len(self._value)):
+
+            #결합된 minterm과 이 minterm이 차이가 있는지 확인
+            if self._value[char] != minterm._value[char]:
+                diff += 1
+                result += "-"
+            
+            #차이가 없을 경우
+            else:
+                result += self._value[char]
+            
+            #차이가 1보다 크면 최소값 결합 X
+            if diff > 1:
+                return None
+        
+        return Minterm(self._values + minterm._values, result)
+        
+class Tabular: #Tabular 확인
+    def __init__(self, variables, values):
+        self._variables = variables
+        self._values = values
+
+    def __get_bits(self, value): #지정된 값의 이진수 반환
+
+        #일단 0으로 채우고 일치 여부 확인
+        return bin(value)[2:].rjust(len(self._variables), "0")
+    
+    def __grouping(self):
+        #값에서 비트 그룹핑
+        
+        #그룹핑한 2차원 배열 확인
+        groups = []
+        for count in range(len(self._variables) + 1):
+            groups.append([])
+
+        #값을 반복해서 확인
+        for value in self._values:
+
+            # Count number of 1's in value's bit equivalent
+            count = self.__get_bits(value).count("1")
+
+            # Add count to proper group
+            groups[count].append(Minterm([value], self.__get_bits(value)))
+        
+        return groups
+        
+    def __get_prime_implicants(self, groups = None): #prime implicants 정의
+
+        if groups == None:
+            groups = self.__initial_group()
+        
+        # If there is only 1 group, return all the minterms in it
+        if len(groups) == 1:
+            return groups[0]
+        
+        # Try comparing the rest
+        else:
+            unused = []
+            comparisons = range(len(groups) - 1)
+            new_groups = [[] for c in comparisons]
+
+            for compare in comparisons:
+                group1 = groups[compare]
+                group2 = groups[compare + 1]
+
+                # Compare every term in group1 with every term in group2
+                for term1 in group1:
+                    for term2 in group2:
+                        
+                        # Try combining it
+                        term3 = term1.combine(term2)
+
+                        # Only add it to the new group if term3 is not None
+                        #   term3 will only be None if term1 and term2 could not
+                        #   be combined
+                        if term3 != None:
+                            term1.use()
+                            term2.use()
+                            if term3 not in new_groups[compare]:
+                                new_groups[compare].append(term3)
+            
+            # Get list of all unused minterms
+            for group in groups:
+                for term in group:
+                    if not term.used() and term not in unused:
+                        unused.append(term)
+            
+            # Add recursive call
+            for term in self.__get_prime_implicants(new_groups):
+                if not term.used() and term not in unused:
+                    unused.append(term)
+
+            return unused
