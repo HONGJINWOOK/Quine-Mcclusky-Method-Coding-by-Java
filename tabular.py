@@ -134,45 +134,40 @@ class Tabular: #Tabular 확인
 
             return unused
 
-def __solution(self): #필요한 최소량의 prime implicant 확인
+    def __solution(self): #필요한 최소량의 prime implicant 확인
         
-        #PI 확인
-        prime_implicants = self.__get_prime_implicants(self.__grouping())
+                #PI 확인
+                prime_implicants = self.__get_prime_implicants(self.__grouping())
         
-        #하나의 Implicant만 확인
-        #EPI
-        essential_prime_implicants = []
-        values_used = [False] * len(self._values)
+                #하나의 Implicant만 확인
+                #EPI
+                essential_prime_implicants = []
+                values_used = [False] * len(self._values)
 
-        for i in range(len(self._values)):
-            value = self._values[i]
+                for i in range(len(self._values)):
+                    value = self._values[i]
 
-            uses = 0
-            last = None
-            for minterm in prime_implicants:
-                if value in minterm.get_values():
-                    uses += 1
-                    last = minterm
-            if uses == 1 and last not in essential_prime_implicants:
-                for v in last.get_values():
-                    values_used[self._values.index(v)] = True
-                essential_prime_implicants.append(last)
+                    uses = 0
+                    last = None
+                    for minterm in prime_implicants:
+                        if value in minterm.get_values():
+                            uses += 1
+                            last = minterm
+                    if uses == 1 and last not in essential_prime_implicants:
+                        for v in last.get_values():
+                            values_used[self._values.index(v)] = True
+                        essential_prime_implicants.append(last)
         
-        #모든 값이 사용되었는지 확인
-        if values_used.count(False) == 0:
-            return essential_prime_implicants
+                #모든 값이 사용되었는지 확인
+                if values_used.count(False) == 0:
+                    return essential_prime_implicants
         
-        #the fewest, largest circle 확인
-        prime_implicants = [prime_implicant for prime_implicant in prime_implicants if prime_implicant not in essential_prime_implicants]
+                #the fewest, largest circle 확인
+                prime_implicants = [prime_implicant for prime_implicant in prime_implicants if prime_implicant not in essential_prime_implicants]
 
-        #하나의 implicant만 남았는지 확인
-        if len(prime_implicants) == 1:
-            return essential_prime_implicants + prime_implicants
+                #하나의 implicant만 남았는지 확인
+                if len(prime_implicants) == 1:
+                    return essential_prime_implicants + prime_implicants
 
-        # Create a power set from the remaining prime implicants and check which
-        #   combination of prime implicants gets the simplest form
-        return essential_prime_implicants + self.__power_set([
-            self._values[index]
-            for index in range(len(self._values))
-            if not values_used[index]
-        ], prime_implicants)
+               
+          
